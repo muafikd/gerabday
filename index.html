@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Мини-игры 💛</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pink: #ffb5c5;
+      --pink-dark: #ff9bb3;
+      --mint: #b8e6d5;
+      --mint-dark: #9dd9c5;
+      --yellow: #fff4b8;
+      --yellow-dark: #ffe88a;
+      --lilac: #e5d4ed;
+      --lilac-dark: #d4b8e0;
+      --white: #fffef9;
+      --shadow: rgba(100, 80, 90, 0.18);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(160deg, #fff5f8 0%, #f8f0fc 35%, #f0fdf9 70%, #fffef5 100%);
+      background-attachment: fixed;
+      padding: 1rem;
+      padding-bottom: 2rem;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .page {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* Заголовок лобби */
+    .header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      color: #5a4a5a;
+      margin-bottom: 0.25rem;
+    }
+
+    .header p {
+      font-size: 0.95rem;
+      color: #7a6a7a;
+    }
+
+    .header .icons {
+      font-size: 1.5rem;
+      margin-top: 0.5rem;
+      letter-spacing: 0.2em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Вкладки */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 100px;
+      padding: 0.85rem 1rem;
+      border: none;
+      border-radius: 1.25rem;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #5a4a5a;
+      background: var(--white);
+      border: 2px solid var(--lilac);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      box-shadow: 0 2px 10px var(--shadow);
+    }
+
+    .tab:hover {
+      border-color: var(--pink);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px var(--shadow);
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--pink) 0%, var(--pink-dark) 100%);
+      border-color: var(--pink-dark);
+      color: #5a3a45;
+    }
+
+    /* Блок контента игры */
+    .game-block {
+      display: none;
+      animation: slideIn 0.35s ease;
+    }
+
+    .game-block.active {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .game-card {
+      background: var(--white);
+      border-radius: 1.25rem;
+      padding: 1.25rem;
+      border: 2px solid var(--mint);
+      box-shadow: 0 6px 20px var(--shadow);
+      margin-bottom: 1rem;
+    }
+
+    .game-title {
+      font-size: 1.1rem;
+      color: #5a4a5a;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ——— Memory ——— */
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      max-width: 280px;
+      margin: 0 auto 1rem;
+    }
+
+    .memory-card {
+      aspect-ratio: 1;
+      border-radius: 0.75rem;
+      border: 2px solid var(--lilac);
+      background: linear-gradient(135deg, var(--lilac) 0%, var(--lilac-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+      min-height: 60px;
+    }
+
+    .memory-card:hover { transform: scale(1.05); }
+    .memory-card.flipped,
+    .memory-card.matched {
+      background: var(--white);
+      border-color: var(--pink);
+      pointer-events: none;
+    }
+    .memory-card .back { display: none; }
+    .memory-card .front { display: block; }
+    .memory-card:not(.flipped):not(.matched) .back { display: flex; }
+    .memory-card:not(.flipped):not(.matched) .front { display: none; }
+    .memory-card .back { font-size: 1.5rem; color: #7a6a7a; }
+
+    .memory-actions {
+      text-align: center;
+    }
+    .memory-actions button {
+      padding: 0.6rem 1.2rem;
+      border-radius: 2rem;
+      border: none;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--mint) 0%, var(--mint-dark) 100%);
+      color: #2d5a4a;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+
+    /* ——— Лови сердечки ——— */
+    .hearts-zone {
+      min-height: 200px;
+      position: relative;
+      border: 2px dashed var(--pink);
+      border-radius: 1rem;
+      background: rgba(255, 181, 197, 0.15);
+      margin-bottom: 1rem;
+    }
+
+    .heart-btn {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      border: none;
+      background: none;
+      font-size: 2rem;
+      cursor: pointer;
+      transition: transform 0.15s;
+      padding: 0;
+      line-height: 1;
+    }
+    .heart-btn:hover { transform: scale(1.2); }
+    .heart-btn:active { transform: scale(0.9); }
+
+    .hearts-score {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #5a4a5a;
+      margin-bottom: 0.5rem;
+    }
+    .hearts-start {
+      display: block;
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 2rem;
+      border: none;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--pink) 0%, var(--pink-dark) 100%);
+      color: #5a3a45;
+      cursor: pointer;
+    }
+
+    /* ——— Пазл ——— */
+    .puzzle-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      --piece-aspect: 1;
+    }
+    /* Холст: невидимая сетка с видимыми границами */
+    .puzzle-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      max-width: min(420px, 94vw);
+      margin: 0 auto;
+      background: transparent;
+      padding: 0;
+      border: 2px dashed var(--lilac-dark);
+      border-radius: 0.75rem;
+      min-height: 200px;
+      box-sizing: border-box;
+    }
+    .puzzle-slot {
+      aspect-ratio: var(--piece-aspect);
+      min-height: 120px;
+      background: transparent;
+      border-radius: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .puzzle-slot.filled { background: transparent; }
+    .puzzle-hint {
+      font-size: 0.9rem;
+      color: #7a6a7a;
+      text-align: center;
+      margin-bottom: 0.75rem;
+    }
+    .puzzle-pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      min-height: 100px;
+      padding: 0.5rem;
+    }
+    .puzzle-piece {
+      width: 120px;
+      height: calc(120px / var(--piece-aspect));
+      max-height: 150px;
+      border-radius: 8px;
+      cursor: grab;
+      flex-shrink: 0;
+      background-size: 300% 200%;
+      background-color: var(--yellow);
+      border: 2px solid var(--yellow-dark);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      touch-action: none;
+    }
+    .puzzle-piece:hover { transform: scale(1.05); box-shadow: 0 4px 12px var(--shadow); }
+    .puzzle-piece.dragging {
+      cursor: grabbing;
+      z-index: 100;
+      transform: scale(1.08);
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+    .puzzle-piece.placed {
+      cursor: default;
+      position: absolute;
+      margin: 0;
+      pointer-events: none;
+      border: none;
+      border-radius: 0;
+    }
+    .puzzle-piece.placed.piece-just-placed {
+      animation: pieceBounce 0.5s ease;
+    }
+    .puzzle-piece.wrong-drop {
+      animation: pieceShake 0.4s ease;
+    }
+    @keyframes pieceBounce {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.08); }
+      70% { transform: scale(0.98); }
+      100% { transform: scale(1); }
+    }
+    @keyframes pieceShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .puzzle-piece .placeholder-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: rgba(90, 74, 90, 0.5);
+    }
+    .puzzle-actions { text-align: center; margin-top: 0.25rem; }
+    .puzzle-actions button {
+      padding: 0.6rem 1.2rem;
+      border-radius: 2rem;
+      border: none;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--mint) 0%, var(--mint-dark) 100%);
+      color: #2d5a4a;
+      cursor: pointer;
+    }
+    /* Полная картинка при завершении (плавное появление) */
+    .puzzle-complete-reveal {
+      max-width: min(420px, 94vw);
+      margin: 0 auto;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 12px 32px var(--shadow);
+      display: none;
+      animation: fullReveal 0.6s ease;
+    }
+    .puzzle-complete-reveal.show { display: block; }
+    .puzzle-complete-reveal img {
+      width: 100%;
+      height: auto;
+      display: block;
+      vertical-align: top;
+    }
+    @keyframes fullReveal {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    /* Модальное окно поздравления */
+    .puzzle-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(90, 74, 90, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .puzzle-modal-overlay.show { display: flex; }
+    .puzzle-modal {
+      background: var(--white);
+      border-radius: 1.5rem;
+      padding: 1.75rem;
+      max-width: 340px;
+      width: 100%;
+      border: 3px solid var(--pink);
+      box-shadow: 0 20px 50px var(--shadow);
+      animation: modalPop 0.4s ease;
+    }
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.9) translateY(15px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .puzzle-modal .modal-icons {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      animation: heartPulse 0.8s ease infinite;
+    }
+    .puzzle-modal .modal-title {
+      font-size: 1.2rem;
+      color: #5a4a5a;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+    }
+    .puzzle-modal .modal-text {
+      color: #6b5b6b;
+      font-size: 1rem;
+      line-height: 1.65;
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    .puzzle-modal .modal-close {
+      display: block;
+      width: 100%;
+      padding: 0.85rem 1.25rem;
+      border: none;
+      border-radius: 2rem;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      background: linear-gradient(135deg, var(--mint) 0%, var(--mint-dark) 100%);
+      color: #2d5a4a;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .puzzle-modal .modal-close:hover { transform: scale(1.02); }
+    .puzzle-modal .surprise-photo-wrap {
+      margin-top: 0.75rem;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      max-width: 200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .puzzle-modal .surprise-photo-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    @keyframes heartPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    /* Модальное окно Memory (победа) */
+    .memory-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(90, 74, 90, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .memory-modal-overlay.show { display: flex; }
+    .memory-modal {
+      background: var(--white);
+      border-radius: 1.5rem;
+      padding: 1.75rem;
+      max-width: 320px;
+      width: 100%;
+      border: 3px solid var(--pink);
+      box-shadow: 0 20px 50px var(--shadow);
+      animation: modalPop 0.4s ease;
+    }
+    .memory-modal .modal-icons {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      animation: heartPulse 0.8s ease infinite;
+    }
+    .memory-modal .modal-title {
+      font-size: 1.2rem;
+      color: #5a4a5a;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    .memory-modal .modal-text {
+      color: #6b5b6b;
+      font-size: 1rem;
+      line-height: 1.6;
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    .memory-modal .modal-close {
+      display: block;
+      width: 100%;
+      padding: 0.85rem 1.25rem;
+      border: none;
+      border-radius: 2rem;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      background: linear-gradient(135deg, var(--mint) 0%, var(--mint-dark) 100%);
+      color: #2d5a4a;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .memory-modal .modal-close:hover { transform: scale(1.02); }
+
+    /* ——— Сюрприз ——— */
+    .surprise-section {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .surprise-toggle {
+      padding: 0.9rem 1.5rem;
+      border-radius: 2rem;
+      border: none;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      background: linear-gradient(135deg, var(--yellow) 0%, var(--yellow-dark) 100%);
+      color: #5a4a30;
+      cursor: pointer;
+      box-shadow: 0 4px 14px var(--shadow);
+      transition: transform 0.2s;
+    }
+    .surprise-toggle:hover { transform: scale(1.05); }
+
+    .surprise-card {
+      margin-top: 1rem;
+      padding: 1.5rem;
+      background: var(--white);
+      border-radius: 1.25rem;
+      border: 3px solid var(--pink);
+      box-shadow: 0 8px 24px var(--shadow);
+      display: none;
+      animation: slideIn 0.4s ease;
+    }
+    .surprise-card.show { display: block; }
+    .surprise-card .heart-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+    .surprise-card p {
+      color: #5a4a5a;
+      line-height: 1.7;
+      font-size: 1.05rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="icons">💛 ✨ 🌸</div>
+      <h1>Мини-игры</h1>
+      <p>Выбери игру и играй!</p>
+    </header>
+
+    <nav class="tabs">
+      <button type="button" class="tab active" data-tab="memory" aria-pressed="true">
+        <span>🃏</span> Memory
+      </button>
+      <button type="button" class="tab" data-tab="hearts" aria-pressed="false">
+        <span>💕</span> Сердечки
+      </button>
+      <button type="button" class="tab" data-tab="puzzle" aria-pressed="false">
+        <span>🧩</span> Пазл
+      </button>
+    </nav>
+
+    <!-- Memory -->
+    <section class="game-block active" id="game-memory" aria-labelledby="tab-memory">
+      <div class="game-card">
+        <h2 class="game-title">🃏 Memory — найди пары</h2>
+        <div class="memory-grid" id="memory-grid"></div>
+        <div class="memory-actions">
+          <button type="button" id="memory-restart">Играть снова</button>
+        </div>
+      </div>
+    </section>
+    <div class="memory-modal-overlay" id="memory-modal-overlay" aria-hidden="true">
+      <div class="memory-modal">
+        <div class="modal-icons">🎉 💛 🎉</div>
+        <p class="modal-title">Победа!</p>
+        <p class="modal-text">Все пары найдены. Ты молодец! 💛</p>
+        <button type="button" class="modal-close" id="memory-modal-close">Закрыть</button>
+      </div>
+    </div>
+
+    <!-- Лови сердечки -->
+    <section class="game-block" id="game-hearts" aria-labelledby="tab-hearts">
+      <div class="game-card">
+        <h2 class="game-title">💕 Лови сердечки</h2>
+        <p class="hearts-score">Счёт: <span id="hearts-score">0</span></p>
+        <div class="hearts-zone" id="hearts-zone"></div>
+        <button type="button" class="hearts-start" id="hearts-start">Старт!</button>
+      </div>
+    </section>
+
+    <!-- Пазл -->
+    <section class="game-block" id="game-puzzle" aria-labelledby="tab-puzzle">
+      <div class="game-card">
+        <h2 class="game-title">🧩 Собери пазл</h2>
+        <p class="puzzle-hint">Перетащи части на нужные места 💛</p>
+        <div class="puzzle-wrap">
+          <div class="puzzle-board" id="puzzle-board"></div>
+          <div class="puzzle-complete-reveal" id="puzzle-complete-reveal">
+            <img id="puzzle-reveal-img" src="" alt="Собранный пазл">
+          </div>
+          <div class="puzzle-pool" id="puzzle-pool"></div>
+          <div class="puzzle-actions">
+            <button type="button" id="puzzle-restart">Собрать заново</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Модальное окно пазла (поздравление) -->
+    <div class="puzzle-modal-overlay" id="puzzle-modal-overlay" aria-hidden="true">
+      <div class="puzzle-modal">
+        <div class="modal-icons">💛 💕 ✨ 💕 💛</div>
+        <p class="modal-title">Молодец!</p>
+        <p class="modal-text" id="puzzle-modal-text">Ты собрала картинку! Этот сюрприз только для тебя 💛</p>
+        <div class="surprise-photo-wrap" id="puzzle-modal-photo" style="display:none;"></div>
+        <button type="button" class="modal-close" id="puzzle-modal-close">Закрыть</button>
+      </div>
+    </div>
+
+    <!-- Сюрприз -->
+    <section class="surprise-section">
+      <button type="button" class="surprise-toggle" id="surprise-toggle">💌 Открыть сюрприз</button>
+      <div class="surprise-card" id="surprise-card">
+        <div class="heart-icon">💛</div>
+        <p id="surprise-text">Ты особенная. Спасибо, что поиграла — этот сюрприз только для тебя! 💛</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ——— Переключение вкладок ———
+    const tabs = document.querySelectorAll('.tab');
+    const blocks = document.querySelectorAll('.game-block');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const id = tab.dataset.tab;
+        tabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-pressed', t === tab ? 'true' : 'false');
+        });
+        tab.classList.add('active');
+        blocks.forEach(b => {
+          b.classList.toggle('active', b.id === 'game-' + id);
+        });
+      });
+    });
+
+    // ——— Memory ———
+    const EMOJI_PAIRS = ['💛', '💕', '🌸', '⭐', '✨', '🎀', '🍀', '🌈'];
+    let memoryCards = [];
+    let flipped = [];
+    let matched = 0;
+
+    function buildMemory() {
+      document.getElementById('memory-modal-overlay').classList.remove('show');
+      document.getElementById('memory-modal-overlay').setAttribute('aria-hidden', 'true');
+      const grid = document.getElementById('memory-grid');
+      const emojis = [...EMOJI_PAIRS, ...EMOJI_PAIRS].sort(() => Math.random() - 0.5);
+      grid.innerHTML = '';
+      memoryCards = [];
+      flipped = [];
+      matched = 0;
+      emojis.forEach((emoji, i) => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'memory-card';
+        card.dataset.index = i;
+        card.dataset.emoji = emoji;
+        card.innerHTML = '<span class="back">💭</span><span class="front">' + emoji + '</span>';
+        card.addEventListener('click', () => flipCard(card));
+        grid.appendChild(card);
+        memoryCards.push(card);
+      });
+    }
+
+    function flipCard(card) {
+      if (card.classList.contains('flipped') || card.classList.contains('matched') || flipped.length >= 2) return;
+      card.classList.add('flipped');
+      flipped.push(card);
+      if (flipped.length === 2) {
+        const [a, b] = flipped;
+        if (a.dataset.emoji === b.dataset.emoji) {
+          a.classList.add('matched');
+          b.classList.add('matched');
+          matched += 2;
+          flipped.length = 0;
+          if (matched === memoryCards.length) setTimeout(() => {
+            document.getElementById('memory-modal-overlay').classList.add('show');
+            document.getElementById('memory-modal-overlay').setAttribute('aria-hidden', 'false');
+          }, 300);
+        } else {
+          setTimeout(() => {
+            a.classList.remove('flipped');
+            b.classList.remove('flipped');
+            flipped.length = 0;
+          }, 600);
+        }
+      }
+    }
+
+    document.getElementById('memory-restart').addEventListener('click', buildMemory);
+    document.getElementById('memory-modal-close').addEventListener('click', () => {
+      document.getElementById('memory-modal-overlay').classList.remove('show');
+      document.getElementById('memory-modal-overlay').setAttribute('aria-hidden', 'true');
+    });
+    document.getElementById('memory-modal-overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'memory-modal-overlay') {
+        e.target.classList.remove('show');
+        e.target.setAttribute('aria-hidden', 'true');
+      }
+    });
+    buildMemory();
+
+    // ——— Лови сердечки ———
+    const heartsZone = document.getElementById('hearts-zone');
+    const heartsScoreEl = document.getElementById('hearts-score');
+    const heartsStartBtn = document.getElementById('hearts-start');
+    let heartsScore = 0;
+    let heartsTimer = null;
+
+    function spawnHeart() {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'heart-btn';
+      btn.textContent = ['💕', '💛', '💖', '❤️'][Math.floor(Math.random() * 4)];
+      btn.style.left = (10 + Math.random() * 80) + '%';
+      btn.style.top = (10 + Math.random() * 70) + '%';
+      btn.addEventListener('click', () => {
+        heartsScore++;
+        heartsScoreEl.textContent = heartsScore;
+        btn.remove();
+      });
+      heartsZone.appendChild(btn);
+    }
+
+    heartsStartBtn.addEventListener('click', () => {
+      heartsScore = 0;
+      heartsScoreEl.textContent = '0';
+      heartsZone.querySelectorAll('.heart-btn').forEach(el => el.remove());
+      if (heartsTimer) clearInterval(heartsTimer);
+      heartsTimer = setInterval(spawnHeart, 800);
+      setTimeout(() => {
+        clearInterval(heartsTimer);
+        heartsTimer = null;
+      }, 15000);
+    });
+
+    // ——— Пазл ———
+    // Замени на свой URL фотографии (например 'puzzle.jpg' или полный путь)
+    const PUZZLE_IMAGE = 'image.jpg';
+    const PUZZLE_SURPRISE_TEXT = 'Ты собрала картинку! Этот сюрприз только для тебя 💛';
+    const PUZZLE_SURPRISE_IMAGE = ''; // опционально: URL фото для блока сюрприза
+
+    const COLS = 3, ROWS = 2, TOTAL = 6;
+    const puzzleBoard = document.getElementById('puzzle-board');
+    const puzzlePool = document.getElementById('puzzle-pool');
+    const puzzleCompleteReveal = document.getElementById('puzzle-complete-reveal');
+    const puzzleRevealImg = document.getElementById('puzzle-reveal-img');
+    const puzzleModalOverlay = document.getElementById('puzzle-modal-overlay');
+    const puzzleModalText = document.getElementById('puzzle-modal-text');
+    const puzzleModalPhoto = document.getElementById('puzzle-modal-photo');
+
+    let placedCount = 0;
+    let dragPiece = null, dragOffsetX = 0, dragOffsetY = 0;
+
+    function getPos(i) {
+      const col = i % COLS, row = Math.floor(i / COLS);
+      return { x: (col * 100) / (COLS - 1) || 0, y: (row * 100) / (ROWS - 1) || 0 };
+    }
+
+    function createPiece(index) {
+      const div = document.createElement('div');
+      div.className = 'puzzle-piece';
+      div.dataset.index = String(index);
+      const pos = getPos(index);
+      if (PUZZLE_IMAGE) {
+        div.style.backgroundImage = 'url(' + PUZZLE_IMAGE + ')';
+        div.style.backgroundPosition = pos.x + '% ' + pos.y + '%';
+      } else {
+        div.innerHTML = '<div class="placeholder-inner">🧩</div>';
+      }
+      return div;
+    }
+
+    function setPuzzleAspectFromImage() {
+      const wrap = puzzleBoard.closest('.puzzle-wrap');
+      if (!PUZZLE_IMAGE) {
+        wrap.style.setProperty('--piece-aspect', '1');
+        return;
+      }
+      const img = new Image();
+      img.onload = function() {
+        const w = this.naturalWidth;
+        const h = this.naturalHeight;
+        const pieceAspect = (2 * w) / (3 * h);
+        wrap.style.setProperty('--piece-aspect', String(pieceAspect));
+      };
+      img.onerror = function() {
+        wrap.style.setProperty('--piece-aspect', '1');
+      };
+      img.src = PUZZLE_IMAGE;
+    }
+
+    function buildPuzzle() {
+      puzzleBoard.innerHTML = '';
+      puzzlePool.innerHTML = '';
+      puzzleCompleteReveal.classList.remove('show');
+      puzzleModalOverlay.classList.remove('show');
+      puzzleModalOverlay.setAttribute('aria-hidden', 'true');
+      placedCount = 0;
+      puzzleModalText.textContent = PUZZLE_SURPRISE_TEXT;
+      if (PUZZLE_SURPRISE_IMAGE) {
+        puzzleModalPhoto.style.display = 'block';
+        puzzleModalPhoto.innerHTML = '<img src="' + PUZZLE_SURPRISE_IMAGE + '" alt="">';
+      } else {
+        puzzleModalPhoto.style.display = 'none';
+        puzzleModalPhoto.innerHTML = '';
+      }
+
+      setPuzzleAspectFromImage();
+
+      for (let i = 0; i < TOTAL; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'puzzle-slot';
+        slot.dataset.slot = String(i);
+        puzzleBoard.appendChild(slot);
+      }
+
+      const indices = [0, 1, 2, 3, 4, 5].sort(() => Math.random() - 0.5);
+      indices.forEach(index => {
+        const piece = createPiece(index);
+        puzzlePool.appendChild(piece);
+        addDragListeners(piece);
+      });
+    }
+
+    function addDragListeners(piece) {
+      const start = (clientX, clientY) => {
+        if (piece.classList.contains('placed')) return;
+        dragPiece = piece;
+        const rect = piece.getBoundingClientRect();
+        dragOffsetX = clientX - rect.left;
+        dragOffsetY = clientY - rect.top;
+        piece.classList.add('dragging');
+        piece.style.position = 'fixed';
+        piece.style.left = (clientX - dragOffsetX) + 'px';
+        piece.style.top = (clientY - dragOffsetY) + 'px';
+        piece.style.width = rect.width + 'px';
+        piece.style.height = rect.height + 'px';
+      };
+      const move = (clientX, clientY) => {
+        if (!dragPiece) return;
+        dragPiece.style.left = (clientX - dragOffsetX) + 'px';
+        dragPiece.style.top = (clientY - dragOffsetY) + 'px';
+      };
+      const end = (clientX, clientY) => {
+        if (!dragPiece) return;
+        const piece = dragPiece;
+        dragPiece = null;
+        const under = document.elementsFromPoint(clientX, clientY);
+        const slot = under.find(el => el.classList && el.classList.contains('puzzle-slot') && !el.classList.contains('filled'));
+        if (slot && slot.dataset.slot === piece.dataset.index) {
+          placePiece(piece, slot);
+        } else {
+          piece.classList.remove('dragging');
+          piece.classList.add('wrong-drop');
+          const rect = piece.getBoundingClientRect();
+          piece.style.position = 'fixed';
+          piece.style.left = rect.left + 'px';
+          piece.style.top = rect.top + 'px';
+          piece.style.width = rect.width + 'px';
+          piece.style.height = rect.height + 'px';
+          piece.style.pointerEvents = 'none';
+          setTimeout(() => {
+            piece.classList.remove('wrong-drop');
+            piece.removeAttribute('style');
+            if (PUZZLE_IMAGE) {
+              const pos = getPos(parseInt(piece.dataset.index, 10));
+              piece.style.backgroundImage = 'url(' + PUZZLE_IMAGE + ')';
+              piece.style.backgroundPosition = pos.x + '% ' + pos.y + '%';
+            }
+            puzzlePool.appendChild(piece);
+          }, 450);
+        }
+      };
+
+      piece.addEventListener('mousedown', e => { e.preventDefault(); start(e.clientX, e.clientY); });
+      document.addEventListener('mousemove', e => { if (dragPiece) move(e.clientX, e.clientY); });
+      document.addEventListener('mouseup', e => { if (dragPiece) { end(e.clientX, e.clientY); } });
+
+      piece.addEventListener('touchstart', e => {
+        e.preventDefault();
+        const t = e.touches[0];
+        start(t.clientX, t.clientY);
+      }, { passive: false });
+      document.addEventListener('touchmove', e => {
+        if (dragPiece && e.touches.length === 1) {
+          e.preventDefault();
+          move(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: false });
+      document.addEventListener('touchend', e => {
+        if (dragPiece && e.changedTouches.length) {
+          const t = e.changedTouches[0];
+          end(t.clientX, t.clientY);
+        }
+      });
+    }
+
+    function placePiece(piece, slot) {
+      piece.classList.remove('dragging');
+      piece.classList.add('placed', 'piece-just-placed');
+      piece.removeAttribute('style');
+      piece.style.position = 'absolute';
+      piece.style.inset = '0';
+      piece.style.width = '100%';
+      piece.style.height = '100%';
+      piece.style.border = 'none';
+      if (PUZZLE_IMAGE) {
+        const pos = getPos(parseInt(piece.dataset.index, 10));
+        piece.style.backgroundImage = 'url(' + PUZZLE_IMAGE + ')';
+        piece.style.backgroundPosition = pos.x + '% ' + pos.y + '%';
+        piece.style.backgroundSize = '300% 200%';
+      }
+      slot.appendChild(piece);
+      slot.classList.add('filled');
+      placedCount++;
+      setTimeout(() => piece.classList.remove('piece-just-placed'), 500);
+      if (placedCount === TOTAL) {
+        onPuzzleComplete();
+      }
+    }
+
+    function onPuzzleComplete() {
+      if (PUZZLE_IMAGE) {
+        puzzleRevealImg.src = PUZZLE_IMAGE;
+        puzzleRevealImg.alt = 'Собранный пазл';
+        puzzleCompleteReveal.classList.add('show');
+      }
+      setTimeout(() => {
+        puzzleModalOverlay.classList.add('show');
+        puzzleModalOverlay.setAttribute('aria-hidden', 'false');
+      }, 800);
+    }
+
+    document.getElementById('puzzle-modal-close').addEventListener('click', () => {
+      puzzleModalOverlay.classList.remove('show');
+      puzzleModalOverlay.setAttribute('aria-hidden', 'true');
+    });
+    puzzleModalOverlay.addEventListener('click', (e) => {
+      if (e.target === puzzleModalOverlay) {
+        puzzleModalOverlay.classList.remove('show');
+        puzzleModalOverlay.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    document.getElementById('puzzle-restart').addEventListener('click', buildPuzzle);
+    buildPuzzle();
+
+    // ——— Сюрприз ———
+    const surpriseToggle = document.getElementById('surprise-toggle');
+    const surpriseCard = document.getElementById('surprise-card');
+    const surpriseText = document.getElementById('surprise-text');
+
+    surpriseToggle.addEventListener('click', () => {
+      surpriseCard.classList.add('show');
+      surpriseToggle.textContent = '💛 Сюрприз открыт';
+    });
+
+    // Текст сюрприза можно менять в HTML (id="surprise-text") или здесь:
+    // surpriseText.textContent = 'Твой персональный текст...';
+  </script>
+</body>
+</html>
